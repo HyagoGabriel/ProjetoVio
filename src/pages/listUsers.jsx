@@ -1,80 +1,117 @@
 import { useState, useEffect } from "react";
-// Imports para criação de tabela
-import Table from "@mui/material/Table";
-import TableContainer from "@mui/material/TableContainer";
-// TableHead é onde colocamos os titulos
-import TableHead from "@mui/material/TableHead";
-// TableBody é onde colocamos o conteúdo
-import TableBody from "@mui/material/TableBody";
-import TableRow from "@mui/material/TableRow";
-import TableCell from "@mui/material/TableCell";
-import Paper from "@mui/material/Paper";
-import api from "../axios/axios";
-import { Button } from "@mui/material";
+import {
+  Table,
+  TableContainer,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  Paper,
+  Button,
+  IconButton,
+  Snackbar,
+  Alert, // Importação corrigida
+} from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
+import DeleteIcon from "@mui/icons-material/Delete";
+import api from "../axios/axios";
+import { X } from "@mui/icons-material";
 
-function listUsers() {
+function ListUsers() {
   const [users, setUsers] = useState([]);
-
-  const navigate = useNavigate();
-
-  async function getUsers() {
-    // Chamada da Api
-    await api.getUsers().then(
-      (response) => {
-        console.log(response.data.users);
-        setUsers(response.data.users);
-      },
-      (error) => {
-        console.log("Erro ", error);
-      }
-    );
-  }
-
-  const listUsers = users.map((user) => {
-    return (
-      <TableRow key={user.id_usuario}>
-        <TableCell align="center">{user.name}</TableCell>
-        <TableCell align="center">{user.email}</TableCell>
-        <TableCell align="center">{user.cpf}</TableCell>
-      </TableRow>
-    );
+  const [alert, setAlert] = useState({
+    open: false,
+    message: "",
+    severity: "",
   });
 
-  function logout(){
+  const showAlert = (message, severity) => {
+    setAlert({ open: true, message, severity });
+  };
+  const handleCloseAlert = () => {
+    setAlert({ ...alert, open: false });
+  };
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    getUsers();
+  }, []); // Esse efeito só vai rodar uma vez, quando o componente for montado
+
+  async function getUsers() {
+    try {
+      const response = await api.getUsers();
+      setUsers(response.data.users);
+    } catch (error) {
+      console.error("Erro ao deletar usuários:", error);
+    }
+  }
+
+  async function deleteUser(id) {
+    try {
+      await api.deleteUser(id);
+      await getUsers();
+      showAlert("Usuário deletado com sucesso!!", "success");
+      // Aqui a lista de usuários é atualizada removendo o usuário deletado
+      setUsers(users.filter((user) => user.id_usuario !== id));
+    } catch (error) {
+      console.error("Erro ao deletar usuário:", error);
+      showAlert(error.response.data.message, "error");
+    }
+  }
+
+  function logout() {
     localStorage.removeItem("authenticated");
     navigate("/");
   }
 
-  useEffect(() => {
-    // if (!localStorage.getItem("authenticated")) {
-    //   navigate("/");
-    // }
-    getUsers();
-  }, []);
-
   return (
     <div>
+      <Snackbar
+        open={alert.open}
+        autoHideDuration={3000}
+        onClose={handleCloseAlert}
+      >
+        <Alert onClose={handleCloseAlert} severity={alert.severity}>
+          {alert.message}
+        </Alert>
+      </Snackbar>
       {users.length === 0 ? (
-        <h1> Carregando usuarios</h1>
+        <h1>Carregando usuários...</h1>
       ) : (
         <div>
           <h5>Lista de usuários</h5>
           <TableContainer component={Paper} style={{ margin: "2px" }}>
             <Table size="small">
-              <TableHead
-                style={{ backgroundColor: "brown", borderStyle: "solid" }}
-              >
+              <TableHead style={{ backgroundColor: "brown" }}>
                 <TableRow>
                   <TableCell align="center">Nome</TableCell>
                   <TableCell align="center">Email</TableCell>
-                  <TableCell align="center">CPF</TableCell>
+                  <TableCell align="center">Ações</TableCell>
                 </TableRow>
               </TableHead>
-              <TableBody>{listUsers}</TableBody>
+              <TableBody>
+                {users.map((user) => (
+                  <TableRow key={user.id_usuario}>
+                    <TableCell align="center">{user.name}</TableCell>
+                    <TableCell align="center">{user.email}</TableCell>
+                    <TableCell align="center">
+                      <IconButton onClick={() => deleteUser(user.id_usuario)}>
+                        <DeleteIcon color="error" />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
             </Table>
           </TableContainer>
-          <Button fullWidth variant="contained" component={Link} to="/" onClick={logout}>
+          <Button
+            fullWidth
+            variant="contained"
+            component={Link}
+            to="/"
+            onClick={logout}
+            style={{ marginTop: "10px" }}
+          >
             SAIR
           </Button>
         </div>
@@ -82,4 +119,5 @@ function listUsers() {
     </div>
   );
 }
-export default listUsers;
+
+export default ListUsers;
