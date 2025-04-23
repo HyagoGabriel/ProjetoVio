@@ -41,6 +41,7 @@ function ListEventos() {
     }
   }
 
+
   // Função para deletar evento
   async function deleteEvent(id) {
     try {
@@ -74,6 +75,8 @@ function ListEventos() {
       </TableCell>
     </TableRow>
   ));
+  
+  
 
   // Hook para carregar os eventos na inicialização
   useEffect(() => {
