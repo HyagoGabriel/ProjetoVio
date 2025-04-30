@@ -1,96 +1,115 @@
-import { useState, useEffect } from "react";
+import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import Container from "@mui/material/Container";
+import CssBaseline from "@mui/material/CssBaseline";
+import Paper from "@mui/material/Paper";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
-import TableBody from "@mui/material/TableBody";
 import TableRow from "@mui/material/TableRow";
-import TableCell from "@mui/material/TableCell";
-import Paper from "@mui/material/Paper";
-import api from "../axios/axios"; // Certifique-se de que a função getEventos() está correta no axios
-import { Button, IconButton, Alert, Snackbar } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
+import Typography from "@mui/material/Typography";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import ModalCriarIngresso from "../components/ModalCriarIngresso";
+import AddIcon from "@mui/icons-material/AddCircleOutline";
+import api from "../axios/axios"
 
-function ListEventos() {
+function listEventos() {
   const [eventos, setEventos] = useState([]);
+  const navigate = useNavigate();
+
+  async function getEventos() {
+    await api.getEventos().then(
+      (response) => {
+        console.log(response.data.eventos);
+        setEventos(response.data.eventos);
+      },
+      (error) => {
+        console.log("Erro", error);
+      }
+    );
+  }
+
+  async function deleteEvento(id_evento) {
+    try {
+      await api.deleteEvento(id_evento);
+      await getEventos();
+      showAlert("success", "Evento Deletado");
+    } catch (error) {
+      console.log("Erro ", error);
+      showAlert("error", error.response.data.error);
+    }
+  }
+
   const [alert, setAlert] = useState({
     open: false,
     severity: "",
     message: "",
   });
-  const navigate = useNavigate();
 
-  // Função para exibir alertas
   const showAlert = (severity, message) => {
     setAlert({ open: true, severity, message });
   };
 
-  // Função para fechar alertas
   const handleCloseAlert = () => {
     setAlert({ ...alert, open: false });
   };
 
-  // Função para obter eventos
-  async function getEventos() {
-    try {
-      const response = await api.getEventos();
-      setEventos(response.data.eventos); // Assumindo que a resposta tem a chave 'eventos'
-    } catch (error) {
-      console.error("Erro ao buscar eventos", error);
-      showAlert("error", "Erro ao buscar eventos");
-    }
-  }
+  const [eventoSelecionado, setEventoSelecionado] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
 
+  const abrirModalIngresso = (evento) => {
+    setEventoSelecionado(evento);
+    setModalOpen(true);
+  };
 
-  // Função para deletar evento
-  async function deleteEvent(id) {
-    try {
-      await api.deleteEvent(id); // Chama a API para excluir o evento
-      await getEventos(); // Recarrega a lista de eventos após a exclusão
-      showAlert("success", "Evento excluído com sucesso!");
-    } catch (error) {
-      console.error("Erro ao deletar evento", error);
-      // Tratar erros de forma mais específica
-      showAlert("error", error.response.data.error);
-    }
-  }
+  const fecharModalIngresso = () => {
+    setModalOpen(false);
+    setEventoSelecionado("");
+  };
 
-  // Função de logout
-  function logout() {
-    localStorage.removeItem("authenticated");
-    navigate("/"); // Redireciona para a página de login
-  }
+  const listEventosRows = eventos.map((evento) => {
+    return (
+      <TableRow key={evento.id_evento}>
+        <TableCell align="center">{evento.nome}</TableCell>
+        <TableCell align="center">{evento.descricao}</TableCell>
+        <TableCell align="center">{evento.data_hora}</TableCell>
+        <TableCell align="center">{evento.local}</TableCell>
+        <TableCell align="center">
+          <IconButton onClick={() => deleteEvento(evento.id_evento)}>
+            <DeleteOutlineIcon />
+          </IconButton>
+        </TableCell>
 
-  // Mapeando os eventos para exibição na tabela
-  const listEventos = eventos.map((evento) => (
-    <TableRow key={evento.id_evento}>
-      <TableCell align="center">{evento.nome}</TableCell>
-      <TableCell align="center">{evento.descricao}</TableCell>
-      <TableCell align="center">{evento.data_hora}</TableCell>
-      <TableCell align="center">{evento.local}</TableCell>
-      <TableCell align="center">
-        <IconButton onClick={() => deleteEvent(evento.id_evento)}>
-          <DeleteIcon color="error" />
-        </IconButton>
-      </TableCell>
-    </TableRow>
-  ));
-  
-  
+        <TableCell align="center">
+          <IconButton onClick={() => abrirModalIngresso(evento)}>
+            Adicionar
+          </IconButton>
+        </TableCell>
+      </TableRow>
+    );
+  });
 
-  // Hook para carregar os eventos na inicialização
   useEffect(() => {
     getEventos();
+    if (!localStorage.getItem("authenticated")) {
+      navigate("/");
+    }
   }, []);
 
   return (
     <div>
-      {/* Exibe um alerta usando o Snackbar */}
       <Snackbar
         open={alert.open}
         autoHideDuration={3000}
         onClose={handleCloseAlert}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
           onClose={handleCloseAlert}
@@ -100,54 +119,108 @@ function ListEventos() {
           {alert.message}
         </Alert>
       </Snackbar>
-
-      {/* Condicionalmente exibe "Carregando..." ou a lista de eventos */}
-      {eventos.length === 0 ? (
-        <h1>Carregando eventos...</h1>
-      ) : (
-        <div>
-          <h5>Lista de Eventos</h5>
-
-          {/* Botão para redirecionar para a lista de usuários */}
-          <Button
-            variant="outlined"
-            color="primary"
-            style={{ marginBottom: "10px" }}
-            onClick={() => navigate("/users")} // Redireciona para a lista de usuários
-          >
-            Ir para Lista de Usuários
-          </Button>
-
-          {/* Tabela de Eventos */}
-          <TableContainer component={Paper} style={{ margin: "2px" }}>
+      <ModalCriarIngresso
+        open={modalOpen}
+        onClose={fecharModalIngresso}
+        eventoSelecionado={eventoSelecionado}
+      />
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Container maxWidth="md">
+          <Typography variant="h5" gutterBottom>
+            Lista de eventos
+          </Typography>
+          <TableContainer component={Paper} style={{ width: "100%" }}>
             <Table size="small">
-              <TableHead style={{ backgroundColor: "brown", borderStyle: "solid" }}>
+              <TableHead>
                 <TableRow>
                   <TableCell align="center">Nome</TableCell>
                   <TableCell align="center">Descrição</TableCell>
                   <TableCell align="center">Data e Hora</TableCell>
                   <TableCell align="center">Local</TableCell>
-                  <TableCell align="center">Ações</TableCell>
+                  <TableCell align="center">Deletar</TableCell>
+                  <TableCell align="center">Criar Ingresso</TableCell>
                 </TableRow>
               </TableHead>
-              <TableBody>{listEventos}</TableBody>
+              <TableBody>{listEventosRows}</TableBody>
             </Table>
           </TableContainer>
-
-          {/* Botão para logout */}
-          <Button
-            fullWidth
-            variant="contained"
-            color="secondary"
-            style={{ marginTop: "15px" }}
-            onClick={logout}
-          >
-            SAIR
+          <Typography variant="h6" style={{ marginTop: "20px" }}>
+            Crie Eventos
+          </Typography>
+          <Button variant="outlined" component={Link} to="/evento/novo">
+            Crie Eventos
           </Button>
-        </div>
-      )}
+        </Container>
+      </ThemeProvider>
     </div>
   );
 }
 
-export default ListEventos;
+const theme = createTheme({
+  palette: {
+    mode: "light",
+    primary: {
+      main: "#000",
+    },
+    background: {
+      default: "#fff",
+      paper: "#fff",
+    },
+    text: {
+      primary: "#000",
+    },
+  },
+  typography: {
+    fontFamily: "Roboto Mono, monospace",
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          color: "#000",
+          borderColor: "#000",
+          "&:hover": {
+            backgroundColor: "rgba(0, 0, 0, 0.1)",
+          },
+        },
+      },
+    },
+    MuiContainer: {
+      styleOverrides: {
+        root: {
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          marginTop: 50,
+          justifyContent: "flex-start",
+          minHeight: "80vh",
+        },
+      },
+    },
+    MuiTypography: {
+      styleOverrides: {
+        root: {
+          marginBottom: "16px",
+          textAlign: "center",
+        },
+      },
+    },
+    MuiTableHead: {
+      styleOverrides: {
+        root: {
+          backgroundColor: "#f0f0f0", // Cor de fundo clara para o cabeçalho
+        },
+      },
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        root: {
+          borderBottom: "1px solid rgba(0, 0, 0, 0.12)", // Adiciona borda sutil às células
+        },
+      },
+    },
+  },
+});
+
+export default listEventos;
