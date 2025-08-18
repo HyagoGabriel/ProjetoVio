@@ -1,10 +1,10 @@
-import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
 import Container from "@mui/material/Container";
 import CssBaseline from "@mui/material/CssBaseline";
 import Paper from "@mui/material/Paper";
+import IconButton from "@mui/material/IconButton";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -14,22 +14,18 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import CriarIngressoModal from "../components/CriarIngressoModal";
-import AddIcon from "@mui/icons-material/AddCircleOutline";
 import api from "../services/axios";
 
-function listEventos() {
-  const [eventos, setEventos] = useState([]);
+function listOrganizadores() {
+  const [organizadores, setOrganizadores] = useState([]);
   const navigate = useNavigate();
 
-  async function getEventos() {
-    await api.getEventos().then(
+  async function getOrganizadores() {
+    await api.getOrganizadores().then(
       (response) => {
-        console.log(response.data.eventos);
-        setEventos(response.data.eventos);
+        console.log(response.data.orgs);
+        setOrganizadores(response.data.orgs);
       },
       (error) => {
         console.log("Erro", error);
@@ -37,11 +33,11 @@ function listEventos() {
     );
   }
 
-  async function deleteEvento(id_evento) {
+  async function deleteOrganizador(id_organizador) {
     try {
-      await api.deleteEvento(id_evento);
-      await getEventos();
-      showAlert("success", "Evento Deletado");
+      await api.deleteOrganizador(id_organizador);
+      await getOrganizadores();
+      showAlert("success", "Organizador Deletado");
     } catch (error) {
       console.log("Erro ", error);
       showAlert("error", error.response.data.error);
@@ -62,35 +58,18 @@ function listEventos() {
     setAlert({ ...alert, open: false });
   };
 
-  const [eventoSelecionado, setEventoSelecionado] = useState("");
-  const [modalOpen, setModalOpen] = useState(false);
-
-  const abrirModalIngresso = (evento) => {
-    setEventoSelecionado(evento);
-    setModalOpen(true);
-  };
-
-  const fecharModalIngresso = () => {
-    setModalOpen(false);
-    setEventoSelecionado("");
-  };
-
-  const listEventosRows = eventos.map((evento) => {
+  const listOrganizadoresRows = organizadores.map((organizador) => {
     return (
-      <TableRow key={evento.id_evento}>
-        <TableCell align="center">{evento.nome}</TableCell>
-        <TableCell align="center">{evento.descricao}</TableCell>
-        <TableCell align="center">{evento.data_hora}</TableCell>
-        <TableCell align="center">{evento.local}</TableCell>
-        <TableCell align="center"><img src={`http://localhost:5000/api/v1/evento/imagem/${evento.id_evento}`} alt="Imagem do Evento" style={{width:"80 px", height:"80px" , objectFit:"cover"}}/></TableCell>
+      <TableRow key={organizador.id_organizador}>
+        <TableCell align="center">{organizador.nome}</TableCell>
+        <TableCell align="center">{organizador.email}</TableCell>
+        <TableCell align="center">{organizador.telefone}</TableCell>
+        <TableCell align="center">{organizador.senha}</TableCell>
         <TableCell align="center">
-          <IconButton onClick={() => deleteEvento(evento.id_evento)}>
+          <IconButton
+            onClick={() => deleteOrganizador(organizador.id_organizador)}
+          >
             <DeleteOutlineIcon />
-          </IconButton>
-        </TableCell>
-        <TableCell align="center">
-          <IconButton onClick={() => abrirModalIngresso(evento)}>
-            <AddIcon />
           </IconButton>
         </TableCell>
       </TableRow>
@@ -98,7 +77,7 @@ function listEventos() {
   });
 
   useEffect(() => {
-    getEventos();
+    getOrganizadores();
     if (!localStorage.getItem("authenticated")) {
       navigate("/");
     }
@@ -119,39 +98,26 @@ function listEventos() {
           {alert.message}
         </Alert>
       </Snackbar>
-      <CriarIngressoModal
-        open={modalOpen}
-        onClose={fecharModalIngresso}
-        eventoSelecionado={eventoSelecionado}
-      />
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Container maxWidth="md">
           <Typography variant="h5" gutterBottom>
-            Lista de eventos
+            Lista de Organizadores
           </Typography>
           <TableContainer component={Paper} style={{ width: "100%" }}>
             <Table size="small">
               <TableHead>
                 <TableRow>
                   <TableCell align="center">Nome</TableCell>
-                  <TableCell align="center">Descrição</TableCell>
-                  <TableCell align="center">Data e Hora</TableCell>
-                  <TableCell align="center">Local</TableCell>
-                  <TableCell align="center">Imagem</TableCell>
+                  <TableCell align="center">E-mail</TableCell>
+                  <TableCell align="center">Telefone</TableCell>
+                  <TableCell align="center">Senha</TableCell>
                   <TableCell align="center">Deletar</TableCell>
-                  <TableCell align="center">Criar Ingresso</TableCell>
                 </TableRow>
               </TableHead>
-              <TableBody>{listEventosRows}</TableBody>
+              <TableBody>{listOrganizadoresRows}</TableBody>
             </Table>
           </TableContainer>
-          <Typography variant="h6" style={{ marginTop: "20px" }}>
-            Crie Eventos
-          </Typography>
-          <Button variant="outlined" component={Link} to="/evento/novo">
-            Crie Eventos
-          </Button>
         </Container>
       </ThemeProvider>
     </div>
@@ -176,17 +142,6 @@ const theme = createTheme({
     fontFamily: "Roboto Mono, monospace",
   },
   components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          color: "#000",
-          borderColor: "#000",
-          "&:hover": {
-            backgroundColor: "rgba(0, 0, 0, 0.1)",
-          },
-        },
-      },
-    },
     MuiContainer: {
       styleOverrides: {
         root: {
@@ -210,18 +165,18 @@ const theme = createTheme({
     MuiTableHead: {
       styleOverrides: {
         root: {
-          backgroundColor: "#f0f0f0", // Cor de fundo clara para o cabeçalho
+          backgroundColor: "#f0f0f0",
         },
       },
     },
     MuiTableCell: {
       styleOverrides: {
         root: {
-          borderBottom: "1px solid rgba(0, 0, 0, 0.12)", // Adiciona borda sutil às células
+          borderBottom: "1px solid rgba(0, 0, 0, 0.12)",
         },
       },
     },
   },
 });
 
-export default listEventos;
+export default listOrganizadores;

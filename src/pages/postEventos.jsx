@@ -1,9 +1,9 @@
 import { useState } from "react";
-import sheets from "../axios/axios"; 
+import api from "../services/axios"; 
 import { TextField, Button } from "@mui/material";
 import { Link } from "react-router-dom";
 
-function CreateEvent() {
+function PostEvento() {
   const [form, setForm] = useState({
     nome: "",
     descricao: "",
@@ -24,7 +24,7 @@ function CreateEvent() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await sheets.createEvento(form, imagem);
+      await api.createEvento(form, imagem);
       alert("Evento criado com sucesso!");
     } catch (err) {
       console.error(err);
@@ -73,9 +73,9 @@ function CreateEvent() {
           Criar Evento
         </Button>
       </form>
-      <Link to="/events">Listar Eventos</Link>
+      <Link to="/eventos">Listar Eventos</Link>
     </div>
   );
 }
 
-export default CreateEvent;
+export default PostEvento;

@@ -7,9 +7,9 @@ import {
   Button,
   TextField,
 } from "@mui/material";
-import api from "../axios/axios";
+import api from "../services/axios";
 
-export default function ModalCriarIngresso({
+export default function CriarIngressoModal({
   open,
   onClose,
   eventoSelecionado,
@@ -67,3 +67,4 @@ export default function ModalCriarIngresso({
     </Dialog>
   );
 }
+
