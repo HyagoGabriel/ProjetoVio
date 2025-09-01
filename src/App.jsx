@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
   return (
@@ -17,11 +18,54 @@ function App() {
           <Route path="/" element={<Login />} />
           <Route path="/cadastro" element={<Cadastro />} />
           <Route path="/evento/novo" element={<PostEvento />} />
-          <Route path="/usuarios" element={<ProtectedRoute><ListUsuarios /></ProtectedRoute>} />
-          <Route path="/eventos" element={<ProtectedRoute><ListEventos /></ProtectedRoute>} />
-          <Route path="/ingressos" element={<ProtectedRoute><ListIngressos /></ProtectedRoute>} />
-          <Route path="/organizadores" element={<ProtectedRoute><ListOrganizadores /></ProtectedRoute>} />
-          <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+          <Route
+            path="/usuarios"
+            element={
+              <ProtectedRoute>
+                <ListUsuarios />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/eventos"
+            element={
+              <ProtectedRoute>
+                <ListEventos />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ingressos"
+            element={
+              <ProtectedRoute>
+                <ListIngressos />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizadores"
+            element={
+              <ProtectedRoute>
+                <ListOrganizadores />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/home"
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </div>

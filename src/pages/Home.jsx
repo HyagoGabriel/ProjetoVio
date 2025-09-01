@@ -46,6 +46,9 @@ function Home() {
         <Button variant="outlined" component={Link} to="/ingressos">
           Lista de Ingressos
         </Button>
+        <Button variant="outlined" component={Link} to="/dashboard">
+        Dash
+        </Button>
       </Container>
     </ThemeProvider>
   );
